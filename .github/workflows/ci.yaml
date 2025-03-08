@@ -19,10 +19,11 @@ jobs:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Set up PNPM
-        uses: pnpm/action-setup@v3
-        with:
-          version: 'latest'  # 最新版を使用。必要に応じて特定バージョンを指定（例: '8.15.1'）
+      - name: Enable Corepack and install PNPM
+        run: |
+          corepack enable
+          corepack prepare pnpm@latest --activate
+          pnpm --version
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
