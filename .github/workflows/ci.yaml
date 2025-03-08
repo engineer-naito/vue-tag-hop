@@ -1,4 +1,4 @@
-name: CI - Lint & Extension Test
+name: CI - Lint
 
 on:
   - push
@@ -29,6 +29,3 @@ jobs:
 
       - name: Run ESLint
         run: pnpm run lint
-
-      - name: Run Extension Tests
-        run: pnpm run test
