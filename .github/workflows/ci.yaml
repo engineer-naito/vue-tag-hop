@@ -13,14 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js and PNPM
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
 
-      - name: Install PNPM
-        run: npm install -g pnpm
+      - name: Set up PNPM
+        uses: pnpm/action-setup@v3
+        with:
+          version: 'latest'  # 最新版を使用。必要に応じて特定バージョンを指定（例: '8.15.1'）
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
