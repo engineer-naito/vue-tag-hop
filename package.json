@@ -16,6 +16,9 @@
       {
         "command": "vue-tag-hop.helloWorld",
         "title": "Hello World"
+      }, {
+        "command": "vue-tag-hop.analyzeVueFile",
+        "title": "✨Vue SFC Analyze✨"
       }
     ]
   },
