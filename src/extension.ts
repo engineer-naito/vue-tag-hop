@@ -15,7 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
       const document = editor.document;
 
       if (document.languageId !== "vue") {
-        vscode.window.showErrorMessage("Please open a Vue SFC (.vue file");
+        vscode.window.showErrorMessage("Please open a Vue SFC (.vue file).");
         return;
       }
 
@@ -27,20 +27,20 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      console.log("========== Vue SFC Analysis Result ==========");
+      console.log("==================== Vue SFC Analysis Result ====================");
       if (descriptor.template) {
-        console.log("Template:", descriptor.template.content);
+        console.log("template:", descriptor.template.content);
       }
 
       if (descriptor.script) {
-        console.log("Script:", descriptor.script.content);
+        console.log("script:", descriptor.script.content);
       }
 
       if (descriptor.scriptSetup) {
-        console.log("Script Setup:", descriptor.scriptSetup.content);
+        console.log("script Setup:", descriptor.scriptSetup.content);
       }
 
-      console.log("Style:");
+      console.log("style:");
       for (const style of descriptor.styles) {
         console.log(style.content);
       }
