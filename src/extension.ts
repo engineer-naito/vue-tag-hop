@@ -1,26 +1,56 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
+import { parse } from "@vue/compiler-sfc";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.commands.registerCommand(
+    "vue-tag-hop.analyzeVueFile",
+    async () => {
+      const editor = vscode.window.activeTextEditor;
 
-  // Use the console to output diagnostic information (console.log) and errors (console.error)
-  // This line of code will only be executed once when your extension is activated
-  console.log("Congratulations, your extension \"vue-tag-hop\" is now active!");
+      if (!editor) {
+        vscode.window.showErrorMessage("No active editor found.");
+        return;
+      }
 
-  // The command has been defined in the package.json file
-  // Now provide the implementation of the command with registerCommand
-  // The commandId parameter must match the command field in package.json
-  const disposable = vscode.commands.registerCommand("vue-tag-hop.helloWorld", () => {
-    // The code you place here will be executed every time your command is executed
-    // Display a message box to the user
-    vscode.window.showInformationMessage("Hello World from vue-tag-hop!");
-  });
+      const document = editor.document;
+
+      if (document.languageId !== "vue") {
+        vscode.window.showErrorMessage("Please open a Vue SFC (.vue file).");
+        return;
+      }
+
+      const text = document.getText();
+      const { descriptor, errors } = parse(text, { sourceMap: false });
+
+      if (errors.length > 0) {
+        vscode.window.showErrorMessage("Error occurred while parsing Vue SFC.");
+        console.error("Parsing errors:", errors);
+        return;
+      }
+
+      console.log("==================== Vue SFC Block Start Lines ====================");
+      
+      if (descriptor.script) {
+        console.log("<script> starts at line:", descriptor.script.loc.start.line);
+      }
+
+      if (descriptor.scriptSetup) {
+        console.log("<script setup> starts at line:", descriptor.scriptSetup.loc.start.line);
+      }
+
+      if (descriptor.template) {
+        console.log("<template> starts at line:", descriptor.template.loc.start.line);
+      }
+
+      descriptor.styles.forEach((style, index) => {
+        console.log(`<style>[${index}] starts at line:`, style.loc.start.line);
+      });
+
+      vscode.window.showInformationMessage("Vue file analysis completed. Start lines logged in debug console.");
+    }
+  );
 
   context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}
