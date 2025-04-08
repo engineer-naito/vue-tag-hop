@@ -3,7 +3,7 @@ import { parse } from "@vue/compiler-sfc";
 
 export function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
-    "vueSfcAnalyzer.analyzeVueFile",
+    "vue-tag-hop.analyzeVueFile",
     async () => {
       const editor = vscode.window.activeTextEditor;
 
@@ -19,7 +19,8 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      const { descriptor, errors } = parse(document.getText());
+      const text = document.getText();
+      const { descriptor, errors } = parse(text, { sourceMap: false });
 
       if (errors.length > 0) {
         vscode.window.showErrorMessage("Error occurred while parsing Vue SFC.");
@@ -27,25 +28,25 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      console.log("==================== Vue SFC Analysis Result ====================");
-      if (descriptor.template) {
-        console.log("template:", descriptor.template.content);
-      }
-
+      console.log("==================== Vue SFC Block Start Lines ====================");
+      
       if (descriptor.script) {
-        console.log("script:", descriptor.script.content);
+        console.log("<script> starts at line:", descriptor.script.loc.start.line);
       }
 
       if (descriptor.scriptSetup) {
-        console.log("script Setup:", descriptor.scriptSetup.content);
+        console.log("<script setup> starts at line:", descriptor.scriptSetup.loc.start.line);
       }
 
-      console.log("style:");
-      for (const style of descriptor.styles) {
-        console.log(style.content);
+      if (descriptor.template) {
+        console.log("<template> starts at line:", descriptor.template.loc.start.line);
       }
 
-      vscode.window.showInformationMessage("Vue file analysis completed. See the debug console for details.");
+      descriptor.styles.forEach((style, index) => {
+        console.log(`<style>[${index}] starts at line:`, style.loc.start.line);
+      });
+
+      vscode.window.showInformationMessage("Vue file analysis completed. Start lines logged in debug console.");
     }
   );
 
