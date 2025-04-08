@@ -1,91 +1,73 @@
 import * as vscode from "vscode";
-import { parse } from "@vue/compiler-sfc";
+import { parse, SFCDescriptor } from "@vue/compiler-sfc";
+
+async function getVueSfcDescriptor(): Promise<{ descriptor: SFCDescriptor | null; document: vscode.TextDocument | null }> {
+  const editor = vscode.window.activeTextEditor;
+
+  if (!editor) {
+    vscode.window.showErrorMessage("No active editor found.");
+    return { descriptor: null, document: null };
+  }
+
+  const document = editor.document;
+
+  if (document.languageId !== "vue") {
+    vscode.window.showErrorMessage("Please open a Vue SFC (.vue file).");
+    return { descriptor: null, document: null };
+  }
+
+  const { descriptor, errors } = parse(document.getText());
+
+  if (errors.length > 0) {
+    vscode.window.showErrorMessage("Error occurred while parsing Vue SFC.");
+    console.error("Parsing errors:", errors);
+    return { descriptor: null, document: null };
+  }
+
+  return { descriptor, document };
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  const analyzeCommand = vscode.commands.registerCommand(
-    "vue-tag-hop.analyzeVueFile",
-    async () => {
-      const editor = vscode.window.activeTextEditor;
+  const analyzeCommand = vscode.commands.registerCommand("vue-tag-hop.analyzeVueFile", async () => {
+    const { descriptor } = await getVueSfcDescriptor();
+    if (!descriptor) {return;}
 
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor found.");
-        return;
-      }
+    console.log("======= Raw descriptor output (expanded) =======");
+    console.dir(descriptor, { depth: null, colors: true });
 
-      const document = editor.document;
+    console.log("==================== Vue SFC Block Start Lines ====================");
 
-      if (document.languageId !== "vue") {
-        vscode.window.showErrorMessage("Please open a Vue SFC (.vue file).");
-        return;
-      }
-
-      const { descriptor, errors } = parse(document.getText());
-
-      console.log("======= Raw descriptor output (expanded) =======");
-      console.dir(descriptor, { depth: null, colors: true });
-
-      if (errors.length > 0) {
-        vscode.window.showErrorMessage("Error occurred while parsing Vue SFC.");
-        console.error("Parsing errors:", errors);
-        return;
-      }
-
-      console.log("==================== Vue SFC Block Start Lines ====================");
-
-      if (descriptor.script) {
-        console.log("<script> starts at line:", descriptor.script.loc.start.line);
-      }
-
-      if (descriptor.scriptSetup) {
-        console.log("<script setup> starts at line:", descriptor.scriptSetup.loc.start.line);
-      }
-
-      if (descriptor.template) {
-        console.log("<template> starts at line:", descriptor.template.loc.start.line);
-      }
-
-      descriptor.styles.forEach((style, index) => {
-        console.log(`<style>[${index}] starts at line:`, style.loc.start.line);
-      });
-
-      vscode.window.showInformationMessage("Vue file analysis completed. Start lines logged in debug console.");
+    if (descriptor.script) {
+      console.log("<script> starts at line:", descriptor.script.loc.start.line);
     }
-  );
 
-  const jumpToTemplateCommand = vscode.commands.registerCommand(
-    "vue-tag-hop.jumpToTemplate",
-    async () => {
-      const editor = vscode.window.activeTextEditor;
-
-      if (!editor) {
-        vscode.window.showErrorMessage("No active editor found.");
-        return;
-      }
-
-      const document = editor.document;
-
-      if (document.languageId !== "vue") {
-        vscode.window.showErrorMessage("Please open a Vue SFC (.vue file).");
-        return;
-      }
-
-      const { descriptor, errors } = parse(document.getText());
-
-      if (errors.length > 0 || !descriptor.template) {
-        vscode.window.showErrorMessage("Unable to parse or locate <template> block.");
-        console.error("Parsing errors:", errors);
-        return;
-      }
-
-      // indexing starts at 0
-      const line = descriptor.template.loc.start.line - 1;
-      const position = new vscode.Position(line, 0);
-      const range = new vscode.Range(position, position);
-
-      editor.selection = new vscode.Selection(position, position);
-      editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+    if (descriptor.scriptSetup) {
+      console.log("<script setup> starts at line:", descriptor.scriptSetup.loc.start.line);
     }
-  );
+
+    if (descriptor.template) {
+      console.log("<template> starts at line:", descriptor.template.loc.start.line);
+    }
+
+    descriptor.styles.forEach((style, index) => {
+      console.log(`<style>[${index}] starts at line:`, style.loc.start.line);
+    });
+
+    vscode.window.showInformationMessage("Vue file analysis completed. Start lines logged in debug console.");
+  });
+
+  const jumpToTemplateCommand = vscode.commands.registerCommand("vue-tag-hop.jumpToTemplate", async () => {
+    const { descriptor } = await getVueSfcDescriptor();
+    const editor = vscode.window.activeTextEditor;
+    if (!descriptor || !editor || !descriptor.template) {return;}
+
+    const line = descriptor.template.loc.start.line - 1;
+    const position = new vscode.Position(line, 0);
+    const range = new vscode.Range(position, position);
+
+    editor.selection = new vscode.Selection(position, position);
+    editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+  });
 
   context.subscriptions.push(analyzeCommand, jumpToTemplateCommand);
 }
