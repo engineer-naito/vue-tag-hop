@@ -14,8 +14,8 @@
   "contributes": {
     "commands": [
       {
-        "command": "vue-tag-hop.helloWorld",
-        "title": "Hello World"
+        "command": "vue-tag-hop.jumpToTemplate",
+        "title": "🔄 Jump to Template 🔄"
       },
       {
         "command": "vue-tag-hop.analyzeVueFile",
